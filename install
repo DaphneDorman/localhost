@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 if [ "$(whoami)" != "root" ]; then
   echo "You must be sudo or root to run this script."
   exit 1
