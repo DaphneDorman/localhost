@@ -5,38 +5,16 @@ if [ "$(whoami)" != "root" ]; then
   exit 1
 fi
 
-DEPENDENCIES="dnsmasq git lamp-server^"
-PROCEED=YES
-for dep in $DEPENDENCIES
-do
-  if ! which $dep &>/dev/null; then
-    echo -e "
-      This script requires $dep to run but it is not installed.
-      If you are running ubuntu or debian,
-      you might be able to install $dep with the following command:
-      \t\tsudo apt-get install $dep\n"
-    PROCEED=NO
-  fi
-done
-if [[ "$PROCEED" == "NO" ]]; then
-  echo -e "Unmet dependencies! Aborting!"
-  exit 1
-fi
-
 mkdir -p /web/tld/sandbox/lab/domain
 cd /web/tld/sandbox/lab/domain
 touch index.php
 echo "OK" >> index.php
 
-sed -i 's/dns=dnsmasq/#dns=dnsmasq/g' /etc/NetworkManager/NetworkManager.conf
-restart network-manager
-
 echo -e "\n\n
-listen-address=127.0.0.1
 address=/dev/127.0.0.1
-\n\n" >> /etc/dnsmasq.conf
+\n\n" >> /etc/NetworkManager/dnsmasq.d/dev.conf
 
-/etc/init.d/dnsmasq restart
+service network-manager restart
 
 echo -e "\n\n
 NameVirtualHost *:80
@@ -44,43 +22,61 @@ NameVirtualHost *:80
 # devTLD
 
 <VirtualHost *:80>
-	ServerName              dev
-	VirtualDocumentRoot     /Users/daphnedorman/Web/tld/sandbox/lab/domain
+    ServerName              dev
+    VirtualDocumentRoot     /web/tld/sandbox/lab/domain
 </VirtualHost>
 
 # ccTLDs (e.g. com.au, co.uk, ...)
 <VirtualHost *:80>
-	ServerName		co.uk.dev
-	ServerAlias		*.*.co.uk.dev *.*.com.au.dev
-	VirtualDocumentRoot	/Users/daphnedorman/Web/%-2.0.%-3.0/%-4/%-5/domain
+    ServerName              cctld.cctld.dev
+    ServerAlias             *.*.*.co.uk.dev *.*.*.com.au.dev
+    VirtualDocumentRoot     /web/%-2.0.%-3.0/%-4/%-5/domain
 </VirtualHost>
 <VirtualHost *:80>
-	ServerName		co.uk.dev
-	ServerAlias		*.co.uk.dev *.com.au.dev
-	VirtualDocumentRoot	/Users/daphnedorman/Web/%-2.0.%-3.0/%-4/lab/domain
+    ServerName              cctld.cctld.dev
+    ServerAlias             *.*.co.uk.dev *.*.com.au.dev
+    VirtualDocumentRoot     /web/%-2.0.%-3.0/%-4/%-5/domain
 </VirtualHost>
 <VirtualHost *:80>
-	ServerName		co.uk.dev
-	ServerAlias		co.uk.dev com.au.dev
-	VirtualDocumentRoot	/Users/daphnedorman/Web/%-2.0.%-3.0/sandbox/lab/domain
+    ServerName              cctld.cctld.dev
+    ServerAlias             *.co.uk.dev *.com.au.dev
+    VirtualDocumentRoot     /web/%-2.0.%-3.0/%-4/lab/domain
+</VirtualHost>
+<VirtualHost *:80>
+    ServerName              cctld.cctld.dev
+    ServerAlias             co.uk.dev com.au.dev
+    VirtualDocumentRoot     /web/%-2.0.%-3.0/sandbox/lab/domain
 </VirtualHost>
 
 # gTLDs (e.g. com, net, ...)
 
 <VirtualHost *:80>
-	ServerName		com.dev
-	ServerAlias		*.*.*.dev
-	VirtualDocumentRoot	/Users/daphnedorman/Web/%-2/%-3/%-4/domain
+    ServerName              gtld.dev
+    ServerAlias             *.*.*.*.dev
+    VirtualDocumentRoot     /web/%-2/%-3/%-4/domain
 </VirtualHost>
 <VirtualHost *:80>
-	ServerName		com.dev
-	ServerAlias		*.*.dev
-	VirtualDocumentRoot	/Users/daphnedorman/Web/%-2/%-3/lab/domain
+    ServerName              gtld.dev
+    ServerAlias             *.*.*.dev
+    VirtualDocumentRoot     /web/%-2/%-3/%-4/domain
 </VirtualHost>
 <VirtualHost *:80>
-	ServerName		com.dev
-	ServerAlias		*.dev
-	VirtualDocumentRoot	/Users/daphnedorman/Web/%-2/sandbox/lab/domain
+    ServerName              gtld.dev
+    ServerAlias             *.*.dev
+    VirtualDocumentRoot     /web/%-2/%-3/lab/domain
 </VirtualHost>
-\n\n" >> /etc/apache2/conf-enabled/zzz-wildcard.conf
+<VirtualHost *:80>
+    ServerName              gtld.dev
+    ServerAlias             *.dev
+    VirtualDocumentRoot     /web/%-2/sandbox/lab/domain
+</VirtualHost>
+\n\n" >> /etc/apache2/sites-available/zzz-wildcard.conf
 a2ensite zzz-wildcard.conf
+a2enmod vhost_alias
+a2enmod rewrite
+a2enmod expires
+a2enmod headers
+service apache2 restart
+
+echo "Script complete."
+exit
