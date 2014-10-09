@@ -10,13 +10,13 @@ cd /web/tld/sandbox/lab/domain
 touch index.php
 echo "OK" >> index.php
 
-echo -e "\n\n
+echo "
 address=/dev/127.0.0.1
-\n\n" >> /etc/NetworkManager/dnsmasq.d/dev.conf
+" >> /etc/NetworkManager/dnsmasq.d/dev.conf
 
 service network-manager restart
 
-echo -e "\n\n
+echo "
 NameVirtualHost *:80
 
 # devTLD
@@ -70,7 +70,7 @@ NameVirtualHost *:80
     ServerAlias             *.dev
     VirtualDocumentRoot     /web/%-2/sandbox/lab/domain
 </VirtualHost>
-\n\n" >> /etc/apache2/sites-available/zzz-wildcard.conf
+" >> /etc/apache2/sites-available/zzz-wildcard.conf
 a2ensite zzz-wildcard.conf
 a2enmod vhost_alias
 a2enmod rewrite
