@@ -5,19 +5,21 @@ if [ "$(whoami)" != "root" ]; then
   exit 1
 fi
 
-mkdir -p /web/tld/sandbox/lab/domain
-cd /web/tld/sandbox/lab/domain
-touch index.php
-echo "OK" >> index.php
+echo -n "Enter your username and press [ENTER]: "
+read username
+
+mkdir -p -m 2775 /web/tld/sandbox/{api,assets,lab,www}/{domain,engine,source,system}
+chgrp -R www-data /web
+
 
 echo "
 address=/dev/127.0.0.1
 " >> /etc/NetworkManager/dnsmasq.d/dev.conf
 
-service network-manager restart
-
 echo "
-NameVirtualHost *:80
+<Directory "/">
+    Require all granted
+</Directory>
 
 # devTLD
 
@@ -76,6 +78,8 @@ a2enmod vhost_alias
 a2enmod rewrite
 a2enmod expires
 a2enmod headers
+
+service network-manager restart
 service apache2 restart
 
 echo "Script complete."
