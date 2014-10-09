@@ -5,7 +5,7 @@ if [ "$(whoami)" != "root" ]; then
   exit 1
 fi
 
-DEPENDENCIES="dnsmasq git apache2 php5 mysql"
+DEPENDENCIES="dnsmasq git lamp-server^"
 PROCEED=YES
 for dep in $DEPENDENCIES
 do
@@ -82,4 +82,5 @@ NameVirtualHost *:80
 	ServerAlias		*.dev
 	VirtualDocumentRoot	/Users/daphnedorman/Web/%-2/sandbox/lab/domain
 </VirtualHost>
-\n\n" >> /etc/apache2/conf.d/virtual
+\n\n" >> /etc/apache2/conf-enabled/zzz-wildcard.conf
+a2ensite zzz-wildcard.conf
