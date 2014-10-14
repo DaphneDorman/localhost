@@ -1,24 +1,35 @@
 #!/usr/bin/env bash
 
+################################################################################
+# Check that this script is being run with elevated privileges.
+################################################################################
+
 if [ "$(whoami)" != "root" ]; then
   echo "You must be sudo or root to run this script."
   exit 1
 fi
 
-echo -n "Enter your username and press [ENTER]: "
-read username
+################################################################################
+# Create web directories.
+################################################################################
 
 mkdir -p -m 2775 /web/tld/sandbox/{api,assets,lab,www}/{domain,engine,source,system}
-chgrp -R www-data /web
+chown -R $SUDO_USER:www-data /web
 
+################################################################################
+# Configure DNSMasq.
+################################################################################
 
 echo "
 address=/dev/127.0.0.1
 " >> /etc/NetworkManager/dnsmasq.d/dev.conf
 
+################################################################################
+# Create wildcard fallback configuration for Apache2.
+################################################################################
 echo "
-<Directory "/">
-    Require all granted
+<Directory /web>
+    Require All Granted
 </Directory>
 
 # devTLD
@@ -73,14 +84,27 @@ echo "
     VirtualDocumentRoot     /web/%-2/sandbox/lab/domain
 </VirtualHost>
 " >> /etc/apache2/sites-available/zzz-wildcard.conf
+
+################################################################################
+# Enable wildcard fallback configuration and some Apache2 modules.
+################################################################################
+
 a2ensite zzz-wildcard.conf
 a2enmod vhost_alias
 a2enmod rewrite
 a2enmod expires
 a2enmod headers
 
+################################################################################
+# Restart services.
+################################################################################
+
 service network-manager restart
 service apache2 restart
 
-echo "Script complete."
+################################################################################
+# Script completed successfully.
+################################################################################
+
+echo "Script completed successfully."
 exit
