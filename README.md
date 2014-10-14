@@ -3,7 +3,7 @@
 ## Prerequisites
 
 ```
-sudo apt-get install curl git lamp-server^
+sudo apt-get install curl git dnsmasq lamp-server^
 ```
 
 ## Installation
