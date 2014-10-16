@@ -28,8 +28,8 @@ address=/dev/127.0.0.1
 # Create wildcard fallback configuration for Apache2.
 ################################################################################
 echo "
-<Directory /web>
-    Require All Granted
+<Directory '/web'>
+    Require all granted
 </Directory>
 
 # devTLD
